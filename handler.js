@@ -86,7 +86,6 @@ module.exports.deleteNote = async (event, context, callback) => {
 
 module.exports.getAllNotes = async (event, context, callback) => {
   context.callbackWaitsForEmptyEventLoop = false
-  let data = JSON.parse(event.body)
   try {
     const params = {
       TableName: NOTES_TABLE_NAME,
