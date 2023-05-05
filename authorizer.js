@@ -13,6 +13,10 @@ const jwtVerifier = CognitoJwtVerifier.create({
 
 const generatePolicy = (principalId, effect, resource) => {
     var authResponse = {};
+    var tmp = resource.split(':');
+    var apiGatewayArnTmp = tmp[5].split('/');
+    
+    var resource = tmp[0] + ":" + tmp[1] + ":" + tmp[2] + ":" + tmp[3] + ":" + tmp[4] + ":" + apiGatewayArnTmp[0] + '/*/*';
 
     authResponse.principalId = principalId
     if (effect && resource){
@@ -41,20 +45,10 @@ exports.handler = async (event, context, callback) => {
         const payload = await jwtVerifier.verify(token)
         console.log(JSON.stringify(payload))
         callback(null, generatePolicy("user", "Allow", event.methodArn))
-
     }
     catch(err){
-        callback("Error: Invalid token")
+        console.log(err)
+        callback(err)
 
     }
-    // switch(token) {
-    //     case "allow":
-    //         callback(null, generatePolicy("user", "Allow", event.methodArn))
-    //         break
-    //     case "deny":
-    //         callback(null, generatePolicy("user", "Deny", event.methodArn))
-    //         break
-    //     default:
-    //         callback("Error: Invalid token")
-    // }
 }
