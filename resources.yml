@@ -49,5 +49,51 @@ cognitoUserPoolDomain:
     UserPoolId: !Ref cognitoUserPool
     Domain: mynotescogdomain-${self:provider.stage}
 
+# CachePolicy
+restAPICachePolicy:
+  Type: AWS::CloudFront::CachePolicy
+  Properties: 
+    CachePolicyConfig: 
+      DefaultTTL: 300
+      MaxTTL: 31536000
+      MinTTL: 60
+      Name: RestAPICachePolicy
+      ParametersInCacheKeyAndForwardedToOrigin: 
+        CookiesConfig: 
+          CookieBehavior: none
+        EnableAcceptEncodingBrotli: true
+        EnableAcceptEncodingGzip: true
+        HeadersConfig: 
+          HeaderBehavior: whitelist
+          Headers:
+            - Authorization
+        QueryStringsConfig: 
+          QueryStringBehavior: none
+      
 
-#  https://mynotescogdomain.auth.us-east-1.amazoncognito.com/login?response_type=token&client_id=3498a8q8ooihogv13cs3e1diq2&redirect_uri=http://localhost:3000
+
+# CloudFront
+cloudFrontDistribution:
+  Type: AWS::CloudFront::Distribution
+  Properties:
+    DistributionConfig:
+      Enabled: true
+      DefaultCacheBehavior:
+        TargetOriginId: restAPIOrigin
+        CachePolicyId: !Ref restAPICachePolicy
+        ViewerProtocolPolicy: https-only
+      CacheBehaviors:
+        - PathPattern: /dev/*
+          TargetOriginId: restAPIOrigin
+          CachePolicyId: !Ref restAPICachePolicy
+          ViewerProtocolPolicy: https-only
+      Origins:
+        - Id: restAPIOrigin
+          DomainName: !Join
+            - "."
+            - - !Ref ApiGatewayRestApi
+              - "execute-api"
+              - ${aws:region}
+              - "amazonaws.com"
+          CustomOriginConfig:
+            OriginProtocolPolicy: https-only
